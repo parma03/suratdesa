@@ -50,4 +50,3 @@ return [
     // Pilih provider yang akan digunakan
     'active_provider' => 'gmail' // Ganti dengan: gmail, yahoo, outlook, atau custom
 ];
-?>
