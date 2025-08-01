@@ -130,7 +130,9 @@ $data = $stmt->fetchAll();
     <script src="../../assets/js/plugin/webfont/webfont.min.js"></script>
     <script>
         WebFont.load({
-            google: { families: ["Public Sans:300,400,500,600,700"] },
+            google: {
+                families: ["Public Sans:300,400,500,600,700"]
+            },
             custom: {
                 families: [
                     "Font Awesome 5 Solid",
@@ -140,7 +142,7 @@ $data = $stmt->fetchAll();
                 ],
                 urls: ["../../assets/css/fonts.min.css"],
             },
-            active: function () {
+            active: function() {
                 sessionStorage.fonts = true;
             },
         });
@@ -347,17 +349,6 @@ $data = $stmt->fetchAll();
                                                                     data-bs-toggle="tooltip" title="Lihat Detail">
                                                                     <i class="fa fa-eye"></i>
                                                                 </button>
-                                                                <button type="button"
-                                                                    class="btn btn-link btn-success btn-lg"
-                                                                    onclick="verifyPermohonan(<?= $row['id_permohonan'] ?>)"
-                                                                    data-bs-toggle="tooltip" title="Verifikasi">
-                                                                    <i class="fa fa-check"></i>
-                                                                </button>
-                                                                <button type="button" class="btn btn-link btn-danger btn-lg"
-                                                                    onclick="deleteData(<?= $row['id_permohonan'] ?>)"
-                                                                    data-bs-toggle="tooltip" title="Hapus">
-                                                                    <i class="fa fa-times"></i>
-                                                                </button>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -416,7 +407,7 @@ $data = $stmt->fetchAll();
     <script>
         let dataTable;
 
-        $(document).ready(function () {
+        $(document).ready(function() {
             // Initialize DataTable
             dataTable = $('#permohonanTable').DataTable({
                 "pageLength": 10,
@@ -442,14 +433,14 @@ $data = $stmt->fetchAll();
                     id_permohonan: id
                 },
                 dataType: 'json',
-                success: function (response) {
+                success: function(response) {
                     if (response.status === 'success') {
                         const permohonan = response.data;
 
                         let filesHtml = '';
                         if (permohonan.files && permohonan.files.length > 0) {
                             filesHtml = '<div class="file-list">';
-                            permohonan.files.forEach(function (file, index) {
+                            permohonan.files.forEach(function(file, index) {
                                 filesHtml += `
                                     <div class="file-item">
                                         <span><i class="fa fa-file"></i> ${file.file_permohonan}</span>
@@ -575,7 +566,7 @@ $data = $stmt->fetchAll();
                             id_permohonan: id
                         },
                         dataType: 'json',
-                        success: function (response) {
+                        success: function(response) {
                             if (response.status === 'success') {
                                 showNotification('success', response.message);
                                 setTimeout(() => {
@@ -585,7 +576,7 @@ $data = $stmt->fetchAll();
                                 showNotification('error', response.message);
                             }
                         },
-                        error: function () {
+                        error: function() {
                             showNotification('error', 'Gagal memverifikasi permohonan');
                         }
                     });
@@ -620,7 +611,7 @@ $data = $stmt->fetchAll();
                             id_permohonan: id
                         },
                         dataType: 'json',
-                        success: function (response) {
+                        success: function(response) {
                             if (response.status === 'success') {
                                 showNotification('success', response.message);
                                 setTimeout(() => {
@@ -630,7 +621,7 @@ $data = $stmt->fetchAll();
                                 showNotification('error', response.message);
                             }
                         },
-                        error: function () {
+                        error: function() {
                             showNotification('error', 'Gagal menghapus permohonan');
                         }
                     });
@@ -748,7 +739,7 @@ $data = $stmt->fetchAll();
         `;
 
         // Initialize tooltips
-        $(function () {
+        $(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
 

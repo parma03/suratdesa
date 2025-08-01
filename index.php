@@ -37,6 +37,10 @@ if (isset($_SESSION['alert_type'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
     $nama = trim($_POST['nama']);
     $email = trim($_POST['email']);
+    $nonik = trim($_POST['nonik']);
+    $nokk = trim($_POST['nokk']);
+    $alamat = trim($_POST['alamat']);
+    $kecamatan = trim($_POST['kecamatan']);
     $password = trim($_POST['password']);
     $confirm_password = trim($_POST['confirm_password']);
 
@@ -78,11 +82,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
 
             // Hash password sebelum menyimpan
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $role = 'Masyarakat';
+            $role = 'Validasi';
 
             // Insert user baru dengan password yang sudah di-hash
-            $stmt = $pdo->prepare("INSERT INTO tb_user (nama, email, password, role, created_at) VALUES (?, ?, ?, ?, NOW())");
-            $result = $stmt->execute([$nama, $email, $hashedPassword, $role]);
+            $stmt = $pdo->prepare("INSERT INTO tb_user (nama, nokk, nonik, alamat, kecamatan, email, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            $result = $stmt->execute([$nama, $nokk, $nonik, $alamat, $kecamatan, $email, $hashedPassword, $role]);
 
             if ($result) {
                 $_SESSION['alert_type'] = 'success';
@@ -185,7 +189,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
     <script src="assets/js/plugin/webfont/webfont.min.js"></script>
     <script>
         WebFont.load({
-            google: { families: ["Public Sans:300,400,500,600,700"] },
+            google: {
+                families: ["Public Sans:300,400,500,600,700"]
+            },
             custom: {
                 families: [
                     "Font Awesome 5 Solid",
@@ -195,7 +201,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
                 ],
                 urls: ["assets/css/fonts.min.css"],
             },
-            active: function () {
+            active: function() {
                 sessionStorage.fonts = true;
             },
         });
@@ -381,6 +387,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
                                             </div>
                                         </div>
                                         <div class="mb-3">
+                                            <label for="registerNokk" class="form-label">No. KK</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-users"></i></span>
+                                                <input type="number" class="form-control" id="registerNokk" name="nokk"
+                                                    placeholder="Masukkan NO. KK" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerNonik" class="form-label">No. NIK</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-users"></i></span>
+                                                <input type="number" class="form-control" id="registerNonik" name="nonik"
+                                                    placeholder="Masukkan NO. NIK" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerAlamat" class="form-label">Alamat</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-map"></i></span>
+                                                <input type="text" class="form-control" id="registerAlamat" name="alamat"
+                                                    placeholder="Masukkan Alamat lengkap" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="registerKecamatan" class="form-label">Kecamatan</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-thumbtack"></i></span>
+                                                <input type="text" class="form-control" id="registerKecamatan" name="kecamatan"
+                                                    placeholder="Masukkan Kecamatan" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
                                             <label for="registerEmail" class="form-label">Email</label>
                                             <div class="input-group">
                                                 <span class="input-group-text"><i class="fas fa-envelope"></i></span>
@@ -522,13 +560,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
 
         // Show notification if there's an alert from PHP
         <?php if (!empty($alert_type) && !empty($alert_message)): ?>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 showNotification('<?php echo $alert_type; ?>', '<?php echo $alert_title; ?>', '<?php echo $alert_message; ?>', '<?php echo $alert_icon; ?>');
             });
         <?php endif; ?>
 
         // Form validation
-        document.getElementById('register').addEventListener('submit', function (e) {
+        document.getElementById('register').addEventListener('submit', function(e) {
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
@@ -546,7 +584,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['login'])) {
         });
 
         // Real-time password confirmation check
-        document.getElementById('confirmPassword').addEventListener('input', function () {
+        document.getElementById('confirmPassword').addEventListener('input', function() {
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = this.value;
 

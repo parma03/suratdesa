@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             case 'get_detail':
                 $id = $_POST['id_permohonan'];
 
-                // Get permohonan data with user info
+                // Get permohonan data with user info - TAMBAHKAN komentar
                 $stmt = $pdo->prepare("
                     SELECT p.*, 
                            m.nama as nama_masyarakat, m.email as email_masyarakat,
@@ -49,6 +49,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     echo json_encode(['status' => 'error', 'message' => 'Data tidak ditemukan!']);
                 }
                 break;
+
+            case 'delete_permohonan':
+                $id = $_POST['id_permohonan'];
+
+                // Cek apakah permohonan milik user yang sedang login dan status = ditolak
+                $stmt = $pdo->prepare("
+                    SELECT * FROM tb_permohonan 
+                    WHERE id_permohonan = ? AND id_masyarakat = ? AND status_permohonan = 'ditolak'
+                ");
+                $stmt->execute([$id, $_SESSION['id_user']]);
+                $permohonan = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$permohonan) {
+                    echo json_encode(['status' => 'error', 'message' => 'Permohonan tidak ditemukan atau tidak dapat dihapus!']);
+                    break;
+                }
+
+                // Begin transaction
+                $pdo->beginTransaction();
+
+                try {
+                    // Get files untuk dihapus dari server
+                    $stmt = $pdo->prepare("SELECT file_permohonan FROM tb_file_permohonan WHERE id_permohonan = ?");
+                    $stmt->execute([$id]);
+                    $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                    // Delete files from server
+                    foreach ($files as $file) {
+                        $filePath = '../../assets/files/' . $file['file_permohonan'];
+                        if (file_exists($filePath)) {
+                            unlink($filePath);
+                        }
+                    }
+
+                    // Delete files from database
+                    $stmt = $pdo->prepare("DELETE FROM tb_file_permohonan WHERE id_permohonan = ?");
+                    $stmt->execute([$id]);
+
+                    // Delete permohonan
+                    $stmt = $pdo->prepare("DELETE FROM tb_permohonan WHERE id_permohonan = ?");
+                    $stmt->execute([$id]);
+
+                    $pdo->commit();
+                    echo json_encode(['status' => 'success', 'message' => 'Permohonan berhasil dihapus!']);
+                } catch (Exception $e) {
+                    $pdo->rollback();
+                    throw $e;
+                }
+                break;
         }
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
@@ -56,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
 }
 
-// Fetch all permohonan data with user info
+// Fetch all permohonan data with user info - UBAH untuk menampilkan diverifikasi DAN ditolak
 $stmt = $pdo->prepare("
     SELECT p.*, 
            m.nama as nama_masyarakat, m.email as email_masyarakat,
@@ -64,7 +113,7 @@ $stmt = $pdo->prepare("
     FROM tb_permohonan p 
     LEFT JOIN tb_user m ON p.id_masyarakat = m.id_user 
     LEFT JOIN tb_user v ON p.id_verifikator = v.id_user 
-    WHERE p.status_permohonan = 'diverifikasi'
+    WHERE (p.status_permohonan = 'diverifikasi' OR p.status_permohonan = 'ditolak')
     AND p.id_masyarakat = :id_user
     ORDER BY p.created_at DESC
 ");
@@ -85,7 +134,9 @@ $data = $stmt->fetchAll();
     <script src="../../assets/js/plugin/webfont/webfont.min.js"></script>
     <script>
         WebFont.load({
-            google: { families: ["Public Sans:300,400,500,600,700"] },
+            google: {
+                families: ["Public Sans:300,400,500,600,700"]
+            },
             custom: {
                 families: [
                     "Font Awesome 5 Solid",
@@ -95,7 +146,7 @@ $data = $stmt->fetchAll();
                 ],
                 urls: ["../../assets/css/fonts.min.css"],
             },
-            active: function () {
+            active: function() {
                 sessionStorage.fonts = true;
             },
         });
@@ -134,6 +185,13 @@ $data = $stmt->fetchAll();
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #51cf66;
+        }
+
+        /* TAMBAHKAN style untuk status ditolak */
+        .status-ditolak {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
         .kategori-badge {
@@ -183,6 +241,36 @@ $data = $stmt->fetchAll();
         .file-item:hover {
             background-color: #e9ecef;
         }
+
+        /* TAMBAHKAN style untuk komentar */
+        .comment-section {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .comment-section.rejected {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .comment-title {
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .comment-title.rejected {
+            color: #721c24;
+        }
+
+        .comment-title i {
+            margin-right: 8px;
+        }
     </style>
 </head>
 
@@ -221,7 +309,7 @@ $data = $stmt->fetchAll();
                     <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
                         <div>
                             <h3 class="fw-bold mb-3">Permohonan</h3>
-                            <h6 class="op-7 mb-2">Data Permohonan - Selesai</h6>
+                            <h6 class="op-7 mb-2">Data Permohonan - Diverifikasi & Ditolak</h6>
                         </div>
                         <div class="ms-md-auto py-2 py-md-0">
                             <!-- Breadcrumb -->
@@ -302,6 +390,13 @@ $data = $stmt->fetchAll();
                                                                     data-bs-toggle="tooltip" title="Lihat Detail">
                                                                     <i class="fa fa-eye"></i>
                                                                 </button>
+                                                                <?php if ($row['status_permohonan'] === 'ditolak'): ?>
+                                                                    <button type="button" class="btn btn-link btn-danger btn-lg"
+                                                                        onclick="deletePermohonan(<?= $row['id_permohonan'] ?>)"
+                                                                        data-bs-toggle="tooltip" title="Hapus Permohonan">
+                                                                        <i class="fa fa-trash"></i>
+                                                                    </button>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -360,7 +455,7 @@ $data = $stmt->fetchAll();
     <script>
         let dataTable;
 
-        $(document).ready(function () {
+        $(document).ready(function() {
             // Initialize DataTable
             dataTable = $('#permohonanTable').DataTable({
                 "pageLength": 10,
@@ -376,7 +471,7 @@ $data = $stmt->fetchAll();
             });
         });
 
-        // View Detail
+        // View Detail - PERBAIKI untuk menampilkan komentar
         function viewDetail(id) {
             $.ajax({
                 url: '',
@@ -386,14 +481,14 @@ $data = $stmt->fetchAll();
                     id_permohonan: id
                 },
                 dataType: 'json',
-                success: function (response) {
+                success: function(response) {
                     if (response.status === 'success') {
                         const permohonan = response.data;
 
                         let filesHtml = '';
                         if (permohonan.files && permohonan.files.length > 0) {
                             filesHtml = '<div class="file-list">';
-                            permohonan.files.forEach(function (file, index) {
+                            permohonan.files.forEach(function(file, index) {
                                 filesHtml += `
                                     <div class="file-item">
                                         <span><i class="fa fa-file"></i> ${file.file_permohonan}</span>
@@ -410,6 +505,34 @@ $data = $stmt->fetchAll();
                         }
 
                         const statusClass = `status-${permohonan.status_permohonan}`;
+
+                        // TAMBAHKAN bagian untuk menampilkan komentar jika status ditolak
+                        let commentSection = '';
+                        if (permohonan.status_permohonan === 'ditolak' && permohonan.komentar) {
+                            commentSection = `
+                                <div class="comment-section rejected">
+                                    <div class="comment-title rejected">
+                                        <i class="fa fa-exclamation-triangle"></i>
+                                        Alasan Penolakan:
+                                    </div>
+                                    <div class="comment-content">
+                                        ${permohonan.komentar}
+                                    </div>
+                                </div>
+                            `;
+                        } else if (permohonan.status_permohonan === 'diverifikasi' && permohonan.komentar) {
+                            commentSection = `
+                                <div class="comment-section">
+                                    <div class="comment-title">
+                                        <i class="fa fa-comment"></i>
+                                        Catatan Verifikator:
+                                    </div>
+                                    <div class="comment-content">
+                                        ${permohonan.komentar}
+                                    </div>
+                                </div>
+                            `;
+                        }
 
                         swal({
                             title: 'Detail Permohonan',
@@ -472,6 +595,8 @@ $data = $stmt->fetchAll();
                                     </div>
                                     ` : ''}
                                     
+                                    ${commentSection}
+                                    
                                     <div class="mb-3">
                                         <h6><strong>File Permohonan:</strong></h6>
                                         ${filesHtml}
@@ -488,6 +613,83 @@ $data = $stmt->fetchAll();
                     } else {
                         showNotification('error', response.message);
                     }
+                }
+            });
+        }
+
+        // TAMBAHKAN fungsi deletePermohonan
+        function deletePermohonan(id) {
+            swal({
+                title: 'Hapus Permohonan?',
+                text: 'Apakah Anda yakin ingin menghapus permohonan ini? Tindakan ini tidak dapat dibatalkan!',
+                icon: 'warning',
+                buttons: {
+                    cancel: {
+                        text: 'Batal',
+                        value: null,
+                        visible: true,
+                        className: 'btn btn-secondary',
+                        closeModal: true,
+                    },
+                    confirm: {
+                        text: 'Ya, Hapus!',
+                        value: true,
+                        visible: true,
+                        className: 'btn btn-danger',
+                        closeModal: true
+                    }
+                },
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: '',
+                        type: 'POST',
+                        data: {
+                            action: 'delete_permohonan',
+                            id_permohonan: id
+                        },
+                        dataType: 'json',
+                        beforeSend: function() {
+                            // Show loading
+                            swal({
+                                title: 'Menghapus...',
+                                text: 'Mohon tunggu sebentar',
+                                icon: 'info',
+                                buttons: false,
+                                closeOnClickOutside: false,
+                                closeOnEsc: false
+                            });
+                        },
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                swal({
+                                    title: 'Berhasil!',
+                                    text: response.message,
+                                    icon: 'success',
+                                    button: 'OK'
+                                }).then(() => {
+                                    // Refresh table
+                                    location.reload();
+                                });
+                            } else {
+                                swal({
+                                    title: 'Error!',
+                                    text: response.message,
+                                    icon: 'error',
+                                    button: 'OK'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            swal({
+                                title: 'Error!',
+                                text: 'Terjadi kesalahan saat menghapus permohonan',
+                                icon: 'error',
+                                button: 'OK'
+                            });
+                        }
+                    });
                 }
             });
         }
@@ -525,7 +727,7 @@ $data = $stmt->fetchAll();
             });
         }
 
-        // Additional CSS for modal detail
+        // Additional CSS for modal detail - PERBARUI dengan style komentar
         const additionalCSS = `
             <style>
                 .detail-container {
@@ -564,6 +766,12 @@ $data = $stmt->fetchAll();
                     border: 1px solid #51cf66;
                 }
 
+                .detail-container .status-ditolak {
+                    background-color: #f8d7da;
+                    color: #721c24;
+                    border: 1px solid #f5c6cb;
+                }
+
                 .detail-container .kategori-badge {
                     background-color: #e9ecef;
                     color: #495057;
@@ -598,11 +806,46 @@ $data = $stmt->fetchAll();
                 .detail-container .file-item:last-child {
                     margin-bottom: 0;
                 }
+
+                .detail-container .comment-section {
+                    background-color: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 15px;
+                }
+
+                .detail-container .comment-section.rejected {
+                    background-color: #f8d7da;
+                    border-color: #f5c6cb;
+                }
+
+                .detail-container .comment-title {
+                    color: #856404;
+                    font-weight: 600;
+                    margin-bottom: 10px;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .detail-container .comment-title.rejected {
+                    color: #721c24;
+                }
+
+                .detail-container .comment-title i {
+                    margin-right: 8px;
+                }
+
+                .detail-container .comment-content {
+                    color: #495057;
+                    line-height: 1.5;
+                    white-space: pre-wrap;
+                }
             </style>
         `;
 
         // Initialize tooltips
-        $(function () {
+        $(function() {
             $('[data-bs-toggle="tooltip"]').tooltip();
         });
 
@@ -613,6 +856,7 @@ $data = $stmt->fetchAll();
 
         // Export functions for global access
         window.viewDetail = viewDetail;
+        window.deletePermohonan = deletePermohonan;
         window.showNotification = showNotification;
         window.refreshTable = refreshTable;
     </script>

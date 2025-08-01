@@ -46,7 +46,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <p>User Account</p>
                         <span class="caret"></span>
                     </a>
-                    <div class="collapse <?= in_array($current_page, ['admin.php', 'pegawai.php', 'masyarakat.php']) ? 'show' : '' ?>"
+                    <div class="collapse <?= in_array($current_page, ['admin.php', 'pegawai.php', 'masyarakat.php', 'validasi.php']) ? 'show' : '' ?>"
                         id="user">
                         <ul class="nav nav-collapse">
                             <li class="<?= $current_page == 'admin.php' ? 'active' : '' ?>">
@@ -62,6 +62,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             <li class="<?= $current_page == 'masyarakat.php' ? 'active' : '' ?>">
                                 <a href="masyarakat.php">
                                     <span class="sub-item">Masyarakat</span>
+                                </a>
+                            </li>
+                            <li class="<?= $current_page == 'validasi.php' ? 'active' : '' ?>">
+                                <a href="validasi.php">
+                                    <span class="sub-item">Validasi</span>
                                 </a>
                             </li>
                         </ul>
