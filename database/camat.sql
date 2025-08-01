@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 03, 2025 at 05:26 PM
+-- Generation Time: Aug 01, 2025 at 05:20 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -56,7 +56,8 @@ CREATE TABLE `tb_permohonan` (
   `judul_permohonan` varchar(255) NOT NULL,
   `deskripsi permohonan` text DEFAULT NULL,
   `kategori_permohonan` enum('Surat Permohonan Rekomendasi','Surat Permohonan Izin','Surat Permohonan Bantuan','Surat Kartu Keluarga') NOT NULL,
-  `status_permohonan` enum('diajukan','diverifikasi') NOT NULL,
+  `status_permohonan` enum('diajukan','diverifikasi','ditolak') NOT NULL,
+  `komentar` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -65,9 +66,9 @@ CREATE TABLE `tb_permohonan` (
 -- Dumping data for table `tb_permohonan`
 --
 
-INSERT INTO `tb_permohonan` (`id_permohonan`, `id_masyarakat`, `id_verifikator`, `judul_permohonan`, `deskripsi permohonan`, `kategori_permohonan`, `status_permohonan`, `created_at`, `updated_at`) VALUES
-(2, 9, 8, 'tes permohonan 1', 'tes 1', 'Surat Permohonan Rekomendasi', 'diverifikasi', '2025-07-03 00:32:36', '2025-07-03 12:34:32'),
-(4, 9, NULL, 'Judul Permohonan Hari INI', 'Deskripsi Permohonan Hari INI', 'Surat Permohonan Izin', 'diajukan', '2025-07-03 13:00:08', NULL);
+INSERT INTO `tb_permohonan` (`id_permohonan`, `id_masyarakat`, `id_verifikator`, `judul_permohonan`, `deskripsi permohonan`, `kategori_permohonan`, `status_permohonan`, `komentar`, `created_at`, `updated_at`) VALUES
+(2, 9, 8, 'tes permohonan 1', 'tes 1', 'Surat Permohonan Rekomendasi', 'diverifikasi', NULL, '2025-07-03 00:32:36', '2025-07-03 12:34:32'),
+(4, 9, 8, 'Judul Permohonan Hari INI', 'Deskripsi Permohonan Hari INI', 'Surat Permohonan Izin', 'ditolak', 'tes', '2025-07-03 13:00:08', '2025-08-01 10:10:17');
 
 -- --------------------------------------------------------
 
@@ -78,9 +79,13 @@ INSERT INTO `tb_permohonan` (`id_permohonan`, `id_masyarakat`, `id_verifikator`,
 CREATE TABLE `tb_user` (
   `id_user` bigint(11) NOT NULL,
   `nama` varchar(255) NOT NULL,
+  `nokk` int(50) DEFAULT NULL,
+  `nonik` int(50) DEFAULT NULL,
+  `alamat` varchar(255) DEFAULT NULL,
+  `kecamatan` varchar(255) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('Administrator','Masyarakat','Pegawai','') NOT NULL,
+  `role` enum('Administrator','Masyarakat','Pegawai','Validasi') NOT NULL,
   `photo_profile` text DEFAULT NULL,
   `created_at` datetime DEFAULT NULL,
   `updated_at` datetime DEFAULT NULL
@@ -90,11 +95,12 @@ CREATE TABLE `tb_user` (
 -- Dumping data for table `tb_user`
 --
 
-INSERT INTO `tb_user` (`id_user`, `nama`, `email`, `password`, `role`, `photo_profile`, `created_at`, `updated_at`) VALUES
-(4, 'Tri Setiawan', 'poseidonseal03@gmail.com', '$2y$10$.JzbJMMX90gKWEon8MZM9u8DzV7A4ug47i8PetA1Qp4jUesNwkGPC', 'Administrator', '1751516550_68660586b5b9e.png', '2025-07-02 22:26:34', '2025-07-03 11:24:50'),
-(7, 'Adamas', 'poseidonseal888@gmail.com', '$2y$10$b7GbLVXvQheizOlsw2TO.uC55NxphDJVqupgGqh7OJ8jk8JvGrrOW', 'Masyarakat', NULL, '2025-07-03 00:30:53', NULL),
-(8, 'pegwai1', 'poseidonseal003@gmail.com', '$2y$10$/oQ.rMxOtUQBhyJk7kJu..nN/er62lpfq/6aiF73JQVSBd9jExaqy', 'Pegawai', '1751520468_686614d476e98.png', '2025-07-03 12:27:48', NULL),
-(9, 'Masyarakat 1', 'cdefilter@gmail.com', '$2y$10$DqrLgQYbx4okvAthDp72B.Q0Ai/OPjrmR0MPLF0VWYTBqEy8g2s0q', 'Masyarakat', NULL, '2025-07-03 12:55:44', NULL);
+INSERT INTO `tb_user` (`id_user`, `nama`, `nokk`, `nonik`, `alamat`, `kecamatan`, `email`, `password`, `role`, `photo_profile`, `created_at`, `updated_at`) VALUES
+(4, 'Tri Setiawan', NULL, NULL, NULL, NULL, 'poseidonseal03@gmail.com', '$2y$10$.JzbJMMX90gKWEon8MZM9u8DzV7A4ug47i8PetA1Qp4jUesNwkGPC', 'Administrator', '1751516550_68660586b5b9e.png', '2025-07-02 22:26:34', '2025-07-03 11:24:50'),
+(7, 'Adamas', NULL, NULL, NULL, NULL, 'poseidonseal888@gmail.com', '$2y$10$b7GbLVXvQheizOlsw2TO.uC55NxphDJVqupgGqh7OJ8jk8JvGrrOW', 'Masyarakat', NULL, '2025-07-03 00:30:53', NULL),
+(8, 'pegwai1', NULL, NULL, NULL, NULL, 'poseidonseal003@gmail.com', '$2y$10$/oQ.rMxOtUQBhyJk7kJu..nN/er62lpfq/6aiF73JQVSBd9jExaqy', 'Pegawai', '1751520468_686614d476e98.png', '2025-07-03 12:27:48', NULL),
+(9, 'Masyarakat 1', NULL, NULL, NULL, NULL, 'kalani1520@gmail.com', '$2y$10$.JzbJMMX90gKWEon8MZM9u8DzV7A4ug47i8PetA1Qp4jUesNwkGPC', 'Masyarakat', NULL, '2025-07-03 12:55:44', NULL),
+(10, 'tes', 93483848, 2147483647, 'tesjfjdhfdj', 'eurueiureiu', 'wawan@mail.com', '$2y$10$OowBTO2vmx6ZcJgGwz52leEcJaWqWElpGG3UYnT0vYRFR2gziikMm', 'Masyarakat', NULL, '2025-08-01 09:51:39', '2025-08-01 09:59:26');
 
 --
 -- Indexes for dumped tables
@@ -141,7 +147,7 @@ ALTER TABLE `tb_permohonan`
 -- AUTO_INCREMENT for table `tb_user`
 --
 ALTER TABLE `tb_user`
-  MODIFY `id_user` bigint(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id_user` bigint(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables
